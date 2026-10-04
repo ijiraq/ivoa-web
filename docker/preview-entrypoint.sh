@@ -7,13 +7,20 @@ cd /site
 
 /usr/local/bin/seed-toolchain.sh
 
+# Compose mounts a named volume at /site/node_modules. Never `rm -rf
+# node_modules` (that removes the mount point and fails with
+# "Device or resource busy"). Install into the directory instead.
+mkdir -p node_modules
 if [[ ! -d node_modules/tailwindcss ]]; then
   echo "- Installing Node dependencies..."
   if [[ -d /opt/ivoa-web-node_modules ]]; then
-    rm -rf node_modules
-    mkdir -p node_modules
+    # Clear incomplete leftovers without deleting the mount point, then
+    # seed from the image-prewarmed tree for a faster first start.
+    find node_modules -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
     cp -a /opt/ivoa-web-node_modules/. node_modules/
   fi
+  # npm ci replaces package contents inside the existing directory and
+  # works with both empty named volumes and host bind-mounts.
   npm ci
 fi
 

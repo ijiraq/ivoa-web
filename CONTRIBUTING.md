@@ -23,6 +23,40 @@ git clone https://github.com/ivoa/ivoa-web.git
 
 You will now be able to make your intended changes locally and preview them.
 
+## Local preview (Docker — recommended)
+
+Before opening a PR, preview content **and** structural/layout changes with the
+canonical Docker setup. This pins Node, Hugo extended, and Pagefind to the same
+versions used in CI (`Makefile` / `Dockerfile`).
+
+Requirements: [Docker](https://docs.docker.com/get-docker/) with Compose v2.
+
+```
+make docker-preview
+# equivalent: docker compose up preview
+```
+
+Then open [http://localhost:1313/](http://localhost:1313/). The repo is
+bind-mounted, so edits are picked up by Hugo's watch mode.
+
+### Alternative: host tools (`make preview`)
+
+If you prefer not to use Docker, install Node.js 20+ and run:
+
+```
+make preview
+```
+
+That installs the pinned Hugo/Pagefind binaries into the repo and serves the
+same local preview on port 1313.
+
+### Deploy credentials
+
+Contributors **never** need IVOA `webtest` / production deploy keys. Real-host
+deploys run only from GitHub Actions with org-held secrets. Local and CI deploy
+smoke tests use a disposable `deploy-mock` OpenSSH target and the test-only
+keypair under `deploy/mock-ssh/` (see [#146](https://github.com/ivoa/ivoa-web/issues/146)).
+
 ## Making a Github Issue
 
 All updates to the site beyond trivial ones, such as fixing spelling mistakes, should have their own dedicated issue in the [Github issue tracker](https://github.com/ivoa/ivoa-web/issues).
@@ -141,11 +175,23 @@ Now click "Create pull request."
 
 It would also be helpful under "Development" on the righthand menu to select your branch from the list in order to connect it to the PR. (You can search for the issue by its issue number in the search box.)
 
+### PR checklist
+
+- [ ] Issue linked / branch named `issNNNN-…` (per this guide)
+- [ ] Local Docker preview checked (`make docker-preview` / `docker compose up preview`); or `make preview` if not using Docker
+- [ ] CI **Build site** job is green (uploads a `public/` artifact for reviewers)
+- [ ] If you changed deploy actions/workflows/compose mock: CI **Deploy smoke** is green
+- [ ] Spot-checked changed pages, nav, and search in the preview
+- [ ] No secrets or real deploy credentials requested or committed
+
 ## Branch Versions of the Site
 
-Your changes will be included in a new branch version of the website after you open a PR. The deployment of this site is triggered automatically in the PR checks.
+Same-repo PRs still get an automatic branch deploy to the maintainer staging host
+(via rsync; see [#146](https://github.com/ivoa/ivoa-web/issues/146)). Fork PRs
+skip that job and should rely on Docker locally plus the CI build artifact.
 
-Assuming the issue branch was called `iss10` and the action complete succesfully, the development version would be accessible at:
+Assuming the issue branch was called `iss10` and the action completed
+successfully, the development version would be accessible at:
 
 [https://webtest.ivoa.info/v/iss10/](https://webtest.ivoa.info/v/iss10/)
 

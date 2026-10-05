@@ -6,12 +6,22 @@ The IVOA website is being developed with [Hugo](https://gohugo.io/), a popular o
 
 You should [install git](https://github.com/git-guides/install-git) if it is not already present on your system.
 
-An account on [Github](https://github.com) is required, along with write permissions on the [ivoa-web repository](https://github.com/ivoa/ivoa-web). Please refer to the [Getting Help](#getting-help) section for information on how to request write access to the repository.
+An account on [Github](https://github.com) is required. Write access to
+[ivoa/ivoa-web](https://github.com/ivoa/ivoa-web) is convenient for ongoing work;
+one-time contributions are encouraged from **forks** (see [Getting Help](#getting-help)
+if you need write access).
 
-One-time contributions are encouraged from forks; you will not benefit
-from CI-based previews then, though.
+**Forks have full local preview** via Docker (`make docker-preview`,
+`make docker-html`, optional `./scripts/deploy-smoke.sh`) with **no IVOA deploy
+secrets**. PR CI still runs the secret-free **Build site** job (downloadable
+**`site-public`** artifact) and **Deploy smoke (mock SSH/rsync)** against a
+disposable mock. What forks typically do *not* get is the automatic push of a
+branch preview to `webtest.ivoa.info` — that path uses org-held secrets and is
+maintainer/same-repo only (see [Branch Versions of the Site](#branch-versions-of-the-site)).
 
-Pushing changes to the repository also requires working authentication, which is covered in the [set up git](https://docs.github.com/en/get-started/getting-started-with-git/set-up-git) documentation.
+Pushing changes also requires working authentication, which is covered in the
+[set up git](https://docs.github.com/en/get-started/getting-started-with-git/set-up-git)
+documentation.
 
 ## Checkout the Repository
 
@@ -69,13 +79,15 @@ Copy-paste steps on a machine with Docker:
 
 5. **After you open / update the PR — check GitHub Actions**
    - Open the PR → **Checks** (or the green/yellow/red status near the PR title) → workflow **CI**.
-   - Confirm these job names are green:
+   - Confirm these job names are green (available for same-repo and fork PRs; no org deploy secrets):
      - **Build site** — Hugo/Pagefind build
-     - **Deploy smoke (mock SSH/rsync)** — rsync into the disposable mock (needed if you changed deploy/Docker/CI files; good to see green anyway)
+     - **Deploy smoke (mock SSH/rsync)** — rsync into the disposable mock only (especially if you changed deploy/Docker/CI files)
    - Download the build artifact:
      1. Open the **Build site** job (or the workflow run summary).
      2. In the right sidebar / bottom **Artifacts** section, download **`site-public`**.
      3. Unzip it: you should see **`index.html`** at the top level of the artifact (the contents of `public/`).
+   - A live URL under `https://webtest.ivoa.info/v/<branch>/` is a **separate**,
+     org-secret deploy for same-repo PRs — not required to review fork work.
 
 ### Alternative: host tools (`make preview`)
 
@@ -216,20 +228,30 @@ It would also be helpful under "Development" on the righthand menu to select you
 ### PR checklist
 
 - [ ] Issue linked / branch named `issNNNN-…` (per this guide)
-- [ ] Followed [How to verify before / after a PR](#how-to-verify-before--after-a-pr): `make docker-preview` → http://localhost:1313 looks right
+- [ ] Followed [How to verify before / after a PR](#how-to-verify-before--after-a-pr): `make docker-preview` → http://localhost:1313 looks right (works from a fork; no IVOA keys)
 - [ ] Optional: `make docker-html` produced `public/index.html` (or `./scripts/deploy-smoke.sh` printed `deploy-smoke OK`)
 - [ ] On the PR **Checks** tab, **Build site** is green; artifact **`site-public`** downloads and contains `index.html`
 - [ ] If you changed deploy/Docker/CI files: **Deploy smoke (mock SSH/rsync)** is also green
 - [ ] No secrets or real deploy credentials requested or committed
+- [ ] Not relying on a `webtest.ivoa.info` URL unless you have a same-repo PR that got the org-secret branch deploy
 
 ## Branch Versions of the Site
 
-Same-repo PRs still get an automatic branch deploy to the maintainer staging host
-(via rsync; see [#146](https://github.com/ivoa/ivoa-web/issues/146)). Fork PRs
-skip that job and should rely on Docker locally plus the CI build artifact.
+**Same-repo PRs** (branch on `ivoa/ivoa-web`) still get an automatic branch
+deploy to the maintainer staging host via rsync and org-held secrets
+(see [#146](https://github.com/ivoa/ivoa-web/issues/146)). That is a convenience
+URL for reviewers — not the only way to preview.
 
-Assuming the issue branch was called `iss10` and the action completed
-successfully, the development version would be accessible at:
+**Fork PRs** typically skip that webtest upload (no org secrets in the fork
+workflow context). Fork contributors still have:
+
+- Local Docker preview / build (`make docker-preview`, `make docker-html`)
+- Optional local mock deploy (`./scripts/deploy-smoke.sh`)
+- CI **Build site** + downloadable **`site-public`** artifact
+- CI **Deploy smoke (mock SSH/rsync)** (mock only; no IVOA keys)
+
+Assuming the issue branch was called `iss10`, the action completed successfully,
+and the PR is from the same repository (not a fork), the webtest URL would be:
 
 [https://webtest.ivoa.info/v/iss10/](https://webtest.ivoa.info/v/iss10/)
 

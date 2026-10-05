@@ -11,13 +11,15 @@ An account on [Github](https://github.com) is required. Write access to
 one-time contributions are encouraged from **forks** (see [Getting Help](#getting-help)
 if you need write access).
 
-**Forks have full local preview** via Docker (`make docker-preview`,
-`make docker-html`, optional `./scripts/deploy-smoke.sh`) with **no IVOA deploy
-secrets**. PR CI still runs the secret-free **Build site** job (downloadable
-**`site-public`** artifact) and **Deploy smoke (mock SSH/rsync)** against a
-disposable mock. What forks typically do *not* get is the automatic push of a
+Before pushing your changes, you can preview locally. **Forks have full local
+preview** via Docker (`make docker-preview`, `make docker-html`, optional
+`./scripts/deploy-smoke.sh`). These previews do **not** require IVOA deploy
+secrets. On a personal fork, a pull request (PR) still runs secret-free continuous
+integration (CI): the **Build site** job (creating a downloadable **`site-public`**
+artifact) and **Deploy smoke (mock SSH/rsync)** against a disposable mock
+destination (to confirm rsync works). Forks do *not* get an automatic push of the
 branch preview to `webtest.ivoa.info` — that path uses org-held secrets and is
-maintainer/same-repo only (see [Branch Versions of the Site](#branch-versions-of-the-site)).
+same-repo / maintainer only (see [Branch Versions of the Site](#branch-versions-of-the-site)).
 
 Pushing changes also requires working authentication, which is covered in the
 [set up git](https://docs.github.com/en/get-started/getting-started-with-git/set-up-git)

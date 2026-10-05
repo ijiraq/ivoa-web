@@ -40,7 +40,9 @@ You will now be able to make your intended changes locally and preview them.
 Before opening a PR, preview content **and** structural/layout changes with the
 canonical Docker setup. This pins Node, Hugo extended, and Pagefind to the same
 versions used in CI (`Makefile` / `Dockerfile`). You do **not** need Hugo or
-Node installed on the host.
+Node installed on the host. Docker uses tools inside the image (`/usr/local/bin`)
+and does **not** install into project-local `hugo-bin/` / `pagefind-bin/` (so a
+later host-side `make preview` is not poisoned by container shims).
 
 Requirements: [Docker](https://docs.docker.com/get-docker/) with Compose v2.
 

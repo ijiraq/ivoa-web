@@ -1,27 +1,24 @@
 #!/usr/bin/env bash
 # Docker preview entrypoint: mirrors `make preview` / local_preview.bash,
 # but binds Hugo to 0.0.0.0 so the host can reach port 1313.
+#
+# Uses image-installed hugo/pagefind from PATH (/usr/local/bin). Does not
+# write hugo-bin/ or pagefind-bin/ into the bind-mounted checkout.
 set -euo pipefail
 
 cd /site
 
-/usr/local/bin/seed-toolchain.sh
+if ! command -v hugo >/dev/null 2>&1 || ! command -v pagefind >/dev/null 2>&1; then
+  echo "hugo and pagefind must be on PATH (image /usr/local/bin)" >&2
+  exit 1
+fi
 
-# Compose mounts a named volume at /site/node_modules. Never `rm -rf
-# node_modules` (that removes the mount point and fails with
-# "Device or resource busy"). Install into the directory instead.
-mkdir -p node_modules
-if [[ ! -d node_modules/tailwindcss ]]; then
-  echo "- Installing Node dependencies..."
-  if [[ -d /opt/ivoa-web-node_modules ]]; then
-    # Clear incomplete leftovers without deleting the mount point, then
-    # seed from the image-prewarmed tree for a faster first start.
-    find node_modules -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
-    cp -a /opt/ivoa-web-node_modules/. node_modules/
-  fi
-  # npm ci replaces package contents inside the existing directory and
-  # works with both empty named volumes and host bind-mounts.
-  npm ci
+# Prefer bind-mounted script so lockfile-hash logic updates without rebuild.
+# shellcheck source=/dev/null
+if [[ -f /site/docker/ensure-node-modules.sh ]]; then
+  source /site/docker/ensure-node-modules.sh
+else
+  source /usr/local/bin/ensure-node-modules.sh
 fi
 
 echo "- Generating search index for preview..."

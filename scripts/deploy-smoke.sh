@@ -10,17 +10,8 @@ MOCK_KEY="${ROOT}/deploy/mock-ssh/id_ed25519"
 chmod 600 "${MOCK_KEY}"
 
 if [[ ! -f public/index.html ]]; then
-  echo "public/ missing; building via Docker..."
-  docker compose build preview
-  docker compose run --rm --no-deps preview \
-    bash -lc 'set -euo pipefail
-      seed-toolchain.sh
-      if [[ ! -d node_modules/tailwindcss ]]; then
-        mkdir -p node_modules
-        cp -a /opt/ivoa-web-node_modules/. node_modules/ 2>/dev/null || true
-        npm ci
-      fi
-      make generate-public-pages index-public-pages'
+  echo "public/ missing; building via make docker-html..."
+  make docker-html
 fi
 
 echo "Starting deploy-mock..."

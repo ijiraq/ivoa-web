@@ -27,17 +27,55 @@ You will now be able to make your intended changes locally and preview them.
 
 Before opening a PR, preview content **and** structural/layout changes with the
 canonical Docker setup. This pins Node, Hugo extended, and Pagefind to the same
-versions used in CI (`Makefile` / `Dockerfile`).
+versions used in CI (`Makefile` / `Dockerfile`). You do **not** need Hugo or
+Node installed on the host.
 
 Requirements: [Docker](https://docs.docker.com/get-docker/) with Compose v2.
 
-```
-make docker-preview
-# equivalent: docker compose up preview
-```
+### How to verify before / after a PR
 
-Then open [http://localhost:1313/](http://localhost:1313/). The repo is
-bind-mounted, so edits are picked up by Hugo's watch mode.
+Copy-paste steps on a machine with Docker:
+
+1. **Get the branch**
+   ```
+   git fetch origin
+   git checkout <branch-name>
+   git pull
+   ```
+   Example for this Docker work: `git checkout cursor/docker-parity-deploys-52dc && git pull`
+
+2. **Live preview (layout + content)**
+   ```
+   docker compose down
+   make docker-preview
+   ```
+   Equivalent: `docker compose up --build preview`.  
+   Open [http://localhost:1313/](http://localhost:1313/) in a browser.  
+   **Pass:** the IVOA home page loads (title/nav visible); edit a markdown file under `content/` and see Hugo reload.  
+   Stop with `Ctrl+C`. If the container was built from an older image, recreate with `docker compose up --build --force-recreate preview`.
+
+3. **Production-style static build only** (writes `./public` on the host; no upload)
+   ```
+   make docker-html
+   ls public/index.html
+   ```
+   **Pass:** command exits 0 and prints `docker-html OK: public/index.html present`; `public/index.html` exists on disk.
+
+4. **Optional full mock deploy** (build if needed + rsync into local OpenSSH mock — not IVOA servers)
+   ```
+   ./scripts/deploy-smoke.sh
+   ```
+   **Pass:** ends with `deploy-smoke OK`. Uses only the test key under `deploy/mock-ssh/`.
+
+5. **After you open / update the PR — check GitHub Actions**
+   - Open the PR → **Checks** (or the green/yellow/red status near the PR title) → workflow **CI**.
+   - Confirm these job names are green:
+     - **Build site** — Hugo/Pagefind build
+     - **Deploy smoke (mock SSH/rsync)** — rsync into the disposable mock (needed if you changed deploy/Docker/CI files; good to see green anyway)
+   - Download the build artifact:
+     1. Open the **Build site** job (or the workflow run summary).
+     2. In the right sidebar / bottom **Artifacts** section, download **`site-public`**.
+     3. Unzip it: you should see **`index.html`** at the top level of the artifact (the contents of `public/`).
 
 ### Alternative: host tools (`make preview`)
 
@@ -178,10 +216,10 @@ It would also be helpful under "Development" on the righthand menu to select you
 ### PR checklist
 
 - [ ] Issue linked / branch named `issNNNN-…` (per this guide)
-- [ ] Local Docker preview checked (`make docker-preview` / `docker compose up preview`); or `make preview` if not using Docker
-- [ ] CI **Build site** job is green (uploads a `public/` artifact for reviewers)
-- [ ] If you changed deploy actions/workflows/compose mock: CI **Deploy smoke** is green
-- [ ] Spot-checked changed pages, nav, and search in the preview
+- [ ] Followed [How to verify before / after a PR](#how-to-verify-before--after-a-pr): `make docker-preview` → http://localhost:1313 looks right
+- [ ] Optional: `make docker-html` produced `public/index.html` (or `./scripts/deploy-smoke.sh` printed `deploy-smoke OK`)
+- [ ] On the PR **Checks** tab, **Build site** is green; artifact **`site-public`** downloads and contains `index.html`
+- [ ] If you changed deploy/Docker/CI files: **Deploy smoke (mock SSH/rsync)** is also green
 - [ ] No secrets or real deploy credentials requested or committed
 
 ## Branch Versions of the Site

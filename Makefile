@@ -57,6 +57,7 @@ help:
 	@printf "\nMake targets for ivoa-web:\n"
 	@printf "* help           Display help (default target).\n"
 	@printf "* docker-preview Canonical local preview via Docker Compose (port 1313).\n"
+	@printf "* docker-html    Production-style static build via Docker (writes ./public).\n"
 	@printf "* preview        Start the preview service without Docker (on port 1313).\n                 All required tools are installed/upgraded automatically, when needed.\n"
 	@printf "* newsletter     Create a new newsletter.\n"
 	@printf "* html           Generate the HTML version of the IVOA Website (with search\n                 index).\n"
@@ -69,6 +70,12 @@ help:
 .PHONY: docker-preview
 docker-preview:
 	docker compose up preview
+
+# Production-style static site build inside Docker (no host Hugo/Node required).
+# Writes ./public on the host checkout; pass looks like: public/index.html exists.
+.PHONY: docker-html
+docker-html:
+	docker compose run --rm --no-deps preview bash /site/docker/build-html.sh
 
 # Ensure Node is installed and its major version is at least 20.
 .PHONY: ensure-node
@@ -95,7 +102,7 @@ npm-install: ensure-node
 	fi
 
 # Help target
-.PHONY: help docker-preview preview update-search-index clear-search-index newsletter list-draft html generate-public-pages clear-generated-public-pages index-public-pages clear-public-pages-index clear install uninstall uninstall-hugo uninstall-pagefind
+.PHONY: help docker-preview docker-html preview update-search-index clear-search-index newsletter list-draft html generate-public-pages clear-generated-public-pages index-public-pages clear-public-pages-index clear install uninstall uninstall-hugo uninstall-pagefind
 
 # Preview target (now depends on Node deps)
 preview: npm-install install update-search-index list-draft
